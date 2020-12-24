@@ -1,0 +1,4 @@
+[submodule "fmtlib"]
+	path = fmtlib
+	url = https://github.com/DanielaE/fmt.git
+	branch = module
