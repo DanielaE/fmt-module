@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <GmhConfig Condition="$(Configuration.Contains('Release'))">Release</GmhConfig>
+    <GmhConfig Condition="$(Configuration.Contains('Debug'))">Debug</GmhConfig>
+    <LibraryArchitecture>lib$(PlatformArchitecture)</LibraryArchitecture>
+    <BmiArchitecture>bmi$(PlatformArchitecture)</BmiArchitecture>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)include;$(IncludePath);$(SolutionDir);</IncludePath>
+    <LibraryPath>$(SolutionDir)$(LibraryArchitecture)\$(Configuration);$(ProjectDir)$(LibraryArchitecture)\$Configuration);$(ProjectDir)$(LibraryArchitecture);$(LibraryPath)</LibraryPath>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <BmiOutputDir>$(SolutionDir)$(BmiArchitecture)\$(Configuration)\</BmiOutputDir>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ConfigurationType)'!='StaticLibrary'">
+    <OutDir Condition="'$(SolutionDir)' != ''">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <LinkIncremental Condition="'$(WholeProgramOptimization)'=='true'">false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ConfigurationType)'=='StaticLibrary'">
+    <OutDir Condition="'$(SolutionDir)' != ''">$(SolutionDir)$(LibraryArchitecture)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ConfigurationType)'=='Application' AND '$(GmhConfig)'=='Debug'">
+    <LocalDebuggerEnvironment>_NO_DEBUG_HEAP=1</LocalDebuggerEnvironment>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalBMIDirectories>$(BmiOutputDir);%(AdditionalBMIDirectories)</AdditionalBMIDirectories>
+      <AdditionalOptions Condition="'$(ConfigurationType)'=='Application'">/GA %(AdditionalOptions)</AdditionalOptions><!-- better TLS in .exe -->
+      <AdditionalOptions>/Zc:strictStrings %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Zc:throwingNew %(AdditionalOptions)</AdditionalOptions><!-- assume spec-conforming new -->
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><!-- source charset and execution charset are utf-8 -->
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions><!-- report c++ spec-conformance in __cplusplus -->
+      <AdditionalOptions>/Zc:externConstexpr %(AdditionalOptions)</AdditionalOptions><!-- enable c++ conformant extern constexpr variables. -->
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData><!-- a.k.a. Zc:inline -->
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules><!-- a.k.a. Zc:rvalueCast -->
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <ConformanceMode>true</ConformanceMode><!-- a.k.a. /permissive- -->
+      <DiagnosticsFormat>Caret</DiagnosticsFormat>
+    </ClCompile>
+    <ClCompile Condition="'$(GmhConfig)'=='Debug'">
+      <Optimization>Disabled</Optimization>
+      <EnableStringPooling>true</EnableStringPooling><!-- /GF -->
+    </ClCompile>
+    <ClCompile Condition="'$(GmhConfig)'=='Release'">
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalOptions>/Gw /Zo %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="'$(GmhConfig)'=='Release'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+   <ResourceCompile>
+      <PreprocessorDefinitions Condition="'$(GmhConfig)'=='Debug'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+      <OptimizeReferences Condition="'$(GmhConfig)'=='Release'">true</OptimizeReferences>
+      <EnableCOMDATFolding Condition="'$(GmhConfig)'=='Release'">true</EnableCOMDATFolding>
+      <AdditionalOptions Condition="'$(GmhConfig)'=='Release'">/WX %(AdditionalOptions)</AdditionalOptions><!-- treat warning as error -->
+      <AdditionalOptions Condition="'$(GmhConfig)'=='Debug'">/Ignore:4075 %(AdditionalOptions)</AdditionalOptions>
+      <GenerateDebugInformation Condition="'$(GmhConfig)'=='Debug'">DebugFastLink</GenerateDebugInformation>
+      <GenerateDebugInformation Condition="'$(GmhConfig)'=='Release'">DebugFull</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(ConfigurationType)'=='StaticLibrary'">
+    <ClCompile>
+      <ProgramDataBaseFileName>$(TargetDir)$(TargetName).pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/Ignore:4221 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <Link>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(ConfigurationType)'=='Application' OR '$(ConfigurationType)'=='DynamicLibrary'">
+    <Link>
+      <AdditionalOptions>/PDBALTPATH:$(TargetName).pdb %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>
