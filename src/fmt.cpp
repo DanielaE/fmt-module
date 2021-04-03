@@ -1,5 +1,7 @@
 module;
 
+#define MSVC_WORKAROUND_MEMBER_TEMPLATE_INSTANTIATION
+
 // put all implementation-provided headers into the global module fragment
 // to prevent attachment to this module
 #include "includes.h"
@@ -31,6 +33,10 @@ export module fmt;
 
 module : private;
 
+#ifdef MSVC_WORKAROUND_MEMBER_TEMPLATE_INSTANTIATION
+#include "fmt/format-inl.h"
+#define FMT_STATIC_THOUSANDS_SEPARATOR
+#endif
 #include "format.cc"
 #ifdef FMT_WITH_OS
 #include "os.cc"
