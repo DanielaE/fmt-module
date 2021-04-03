@@ -31,10 +31,9 @@
 #ifdef _WIN32
 #  include <io.h>
 #endif
-
-// locale.h
 #include <locale>
 
+#ifdef FMT_WITH_OPTIONAL_COMPONENTS
 // ostream.h
 #include <ostream>
 
@@ -49,6 +48,7 @@
 // args.h
 #include <functional>
 #include <vector>
+#endif
 
 // os.h
 #ifdef FMT_WITH_OS
@@ -61,5 +61,3 @@
     #include <fcntl.h>
   #endif
 #endif
-
-#include <cassert>

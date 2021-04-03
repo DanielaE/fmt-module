@@ -1,7 +1,5 @@
-#if defined(NAMED_MODULE)
+#if !defined(UNITY_BUILD)
 import fmt;
-#elif defined(HEADER_MODULE)
-import "fmt.hpp";
 #else
 #include "includes.h"
 #define FMT_USE_NONTYPE_TEMPLATE_PARAMETERS 1
