@@ -32,11 +32,9 @@
 #  include <io.h>
 #endif
 #include <locale>
-
-#ifdef FMT_WITH_OPTIONAL_COMPONENTS
-// ostream.h
 #include <ostream>
 
+#ifdef FMT_WITH_OPTIONAL_COMPONENTS
 // ranges.h
 #include <initializer_list>
 

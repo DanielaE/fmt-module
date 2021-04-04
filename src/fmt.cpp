@@ -16,6 +16,27 @@ export module fmt;
 // module purview to attach them to this module
 #include "fmt/format.h"
 #include "fmt/compile.h"
+#include "fmt/printf.h"
+
+FMT_BEGIN_NAMESPACE
+export {
+template <detail::fixed_string Str>
+struct _compile : detail::compiled_string {
+  using char_type = std::remove_cvref_t<decltype(Str.data[0])>;
+  constexpr operator basic_string_view<char_type>() const {
+    return { Str.data, sizeof(Str.data) / sizeof(char_type) - 1 };
+  }
+};
+
+template <detail::fixed_string Str>
+struct _string : compile_string {
+  using char_type = std::remove_cvref_t<decltype(Str.data[0])>;
+  constexpr operator basic_string_view<char_type>() const {
+    return { Str.data, sizeof(Str.data) / sizeof(char_type) - 1 };
+  }
+};
+}
+FMT_END_NAMESPACE
 
 #ifdef FMT_WITH_OPTIONAL_COMPONENTS
 #include "fmt/locale.h"
@@ -23,7 +44,6 @@ export module fmt;
 #include "fmt/ranges.h"
 #include "fmt/chrono.h"
 #include "fmt/color.h"
-#include "fmt/printf.h"
 #include "fmt/args.h"
 #endif
 
