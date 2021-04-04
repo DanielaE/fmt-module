@@ -33,6 +33,7 @@
 #endif
 #include <locale>
 #include <ostream>
+#include <vector>
 
 #ifdef FMT_WITH_OPTIONAL_COMPONENTS
 // ranges.h
@@ -45,7 +46,6 @@
 
 // args.h
 #include <functional>
-#include <vector>
 #endif
 
 // os.h

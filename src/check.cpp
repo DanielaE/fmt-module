@@ -1,13 +1,14 @@
-#if !defined(UNITY_BUILD)
+#if !defined(NO_MODULE)
 
 import fmt;
 
 #else
+
 #pragma warning(disable: 4702)
 
 #include "includes.h"
 #define FMT_USE_NONTYPE_TEMPLATE_PARAMETERS 1
-#include "format.cc"
+#include "fmt/format.h"
 #include "fmt/compile.h"
 #include "fmt/printf.h"
 #ifdef FMT_WITH_OPTIONAL_COMPONENTS
@@ -17,6 +18,9 @@ import fmt;
 #	include "fmt/locale.h"
 #	include "fmt/ostream.h"
 #	include "fmt/ranges.h"
+#endif
+#ifndef FMT_HEADER_ONLY
+#include "format.cc"
 #endif
 
 FMT_BEGIN_NAMESPACE
@@ -48,19 +52,19 @@ FMT_END_NAMESPACE
 using namespace fmt::literals;
 
 int main() {
-	auto result = fmt::format("{}#", 42.0);
+	auto result = fmt::format("{} ", 42.0);
 	static_assert(sizeof(decltype(result)::value_type) == sizeof(char));
 	fmt::print("{}\n", result);
 	fmt::print("{}", "Grüße aus Nürnberg!");
-#ifdef UNITY_BUILD
+#ifdef NO_MODULE
 	result = fmt::format(FMT_STRING("{}"), 42);
 	result = fmt::format(FMT_COMPILE("{}"), 42);
 	const auto x = fmt::_compile<"{}">{};
 	const auto y = "{}"_cf;
 #endif
 	// wchar_t
-//	auto wresult = fmt::format(L"{}", 42.0);
-#ifdef UNITY_BUILD
+#ifdef NO_MODULE
+	auto wresult = fmt::format(L"{} ", 42.0);
 	static_assert(sizeof(decltype(wresult)::value_type) == sizeof(wchar_t));
 	wresult = fmt::format(FMT_COMPILE(L"{}"), 42);
 	fmt::print(L"{}\n", wresult);

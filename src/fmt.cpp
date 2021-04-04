@@ -51,6 +51,7 @@ FMT_END_NAMESPACE
 #include "fmt/os.h"
 #endif
 
+#ifndef FMT_HEADER_ONLY
 module : private;
 
 #ifdef MSVC_WORKAROUND_MEMBER_TEMPLATE_INSTANTIATION
@@ -60,4 +61,5 @@ module : private;
 #include "format.cc"
 #ifdef FMT_WITH_OS
 #include "os.cc"
+#endif
 #endif
