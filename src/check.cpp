@@ -2,6 +2,18 @@
 
 import fmt;
 
+#ifdef EXPOSE_MSVC_MODULE_LEAK_HEADER_GUARD_BUG
+#ifdef FMT_CORE_H_
+#error FMT_CORE_H_ is defined
+#endif
+#ifdef FMT_FORMAT_H_
+#error FMT_FORMAT_H_ is defined
+#endif
+#ifdef FMT_FORMAT_INL_H_
+#error FMT_FORMAT_INL_H_ is defined
+#endif
+#endif
+
 #else
 
 #pragma warning(disable: 4702)
@@ -11,62 +23,70 @@ import fmt;
 #include "fmt/format.h"
 #include "fmt/compile.h"
 #include "fmt/printf.h"
+#include "fmt-ct-strings.h"
+
 #ifdef FMT_WITH_OPTIONAL_COMPONENTS
-#	include "fmt/args.h"
-#	include "fmt/chrono.h"
-#	include "fmt/color.h"
-#	include "fmt/locale.h"
-#	include "fmt/ostream.h"
-#	include "fmt/ranges.h"
+#   include "fmt/args.h"
+#   include "fmt/chrono.h"
+#   include "fmt/color.h"
+#   include "fmt/locale.h"
+#   include "fmt/ostream.h"
+#   include "fmt/ranges.h"
 #endif
-#ifndef FMT_HEADER_ONLY
+
+#if !defined(FMT_HEADER_ONLY) && defined(UNITY_BUILD)
 #include "format.cc"
 #endif
 
-FMT_BEGIN_NAMESPACE
-
-template <detail::fixed_string Str>
-struct _compile : detail::compiled_string {
-	using char_type = std::remove_cvref_t<decltype(Str.data[0])>;
-	constexpr operator basic_string_view<char_type>() const {
-		return {Str.data, sizeof(Str.data) / sizeof(char_type) - 1};
-	}
-};
-
-template <detail::fixed_string Str>
-struct _string : compile_string {
-	using char_type = std::remove_cvref_t<decltype(Str.data[0])>;
-	constexpr operator basic_string_view<char_type>() const {
-		return {Str.data, sizeof(Str.data) / sizeof(char_type) - 1};
-	}
-};
-
-FMT_END_NAMESPACE
 #endif
 
+// provide FMT_* macros using templates from fmt-ct-strings.h
 #undef FMT_COMPILE
 #define FMT_COMPILE(s) fmt::_compile<s>{}
 #undef FMT_STRING
 #define FMT_STRING(s) fmt::_string<s>{}
 
-using namespace fmt::literals;
+using namespace fmt::literals; // for udl ""_cf
 
 int main() {
-	auto result = fmt::format("{} ", 42.0);
-	static_assert(sizeof(decltype(result)::value_type) == sizeof(char));
-	fmt::print("{}\n", result);
-	fmt::print("{}", "Grüße aus Nürnberg!");
-#ifdef NO_MODULE
-	result = fmt::format(FMT_STRING("{}"), 42);
-	result = fmt::format(FMT_COMPILE("{}"), 42);
-	const auto x = fmt::_compile<"{}">{};
-	const auto y = "{}"_cf;
+    auto result = fmt::format("{}", 42.0);
+    static_assert(sizeof(decltype(result)::value_type) == sizeof(char));
+    auto greetings = fmt::format("{greeting} {city}!", "greeting"_a = "Grüße aus", "city"_a ="Nürnberg");
+    fmt::print("{}\n", result);
+    fmt::print("{}\n", greetings);
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    result = fmt::format(FMT_STRING("{}"), 42);
+    result = fmt::format(FMT_COMPILE("{}"), 42);
+    result = fmt::format("{}"_cf, 42);
 #endif
-	// wchar_t
-#ifdef NO_MODULE
-	auto wresult = fmt::format(L"{} ", 42.0);
-	static_assert(sizeof(decltype(wresult)::value_type) == sizeof(wchar_t));
-	wresult = fmt::format(FMT_COMPILE(L"{}"), 42);
-	fmt::print(L"{}\n", wresult);
+
+    // wchar_t
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    auto wresult = fmt::format(L"{}", 42.0);
+    static_assert(sizeof(decltype(wresult)::value_type) == sizeof(wchar_t));
+    auto wgreetings = fmt::format(L"{} {}!", L"Greetings from", L"Nuremberg");
+    fmt::print(L"wide: {}\n", wresult);
+    fmt::print(L"wide: {}\n", wgreetings);
+    wresult = fmt::format(FMT_STRING(L"{}"), 42);
+    wresult = fmt::format(FMT_COMPILE(L"{}"), 42);
 #endif
+
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+#include <string_view>
+using std::string_view;
+    const auto s = fmt::_string<"{}">{};
+    const auto c = fmt::_compile<"{}">{};
+    const auto u = "{}"_cf;
+    constexpr std::string_view reference("{}");
+    static_assert(fmt::string_view(s).data() == reference);
+    static_assert(fmt::string_view(c).data() == reference);
+    static_assert(fmt::string_view(u).data() == reference);
+
+    const auto ws = fmt::_string<L"{}">{};
+    const auto wc = fmt::_compile<L"{}">{};
+    constexpr std::wstring_view wreference(L"{}");
+    static_assert(fmt::wstring_view(ws).data() == wreference);
+    static_assert(fmt::wstring_view(wc).data() == wreference);
+#endif
+
 }

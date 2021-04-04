@@ -51,7 +51,7 @@ FMT_END_NAMESPACE
 #include "fmt/os.h"
 #endif
 
-#ifndef FMT_HEADER_ONLY
+#if !defined(FMT_HEADER_ONLY) && !defined(FMT_USE_IMPLEMENTATION_UNIT)
 module : private;
 
 #ifdef MSVC_WORKAROUND_MEMBER_TEMPLATE_INSTANTIATION
