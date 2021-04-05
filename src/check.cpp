@@ -1,3 +1,5 @@
+//#define NO_MODULE
+//#define UNITY_BUILD
 #if !defined(NO_MODULE)
 
 import fmt;
@@ -23,12 +25,12 @@ import fmt;
 #include "fmt/format.h"
 #include "fmt/compile.h"
 #include "fmt/printf.h"
+#include "fmt/color.h"
 #include "fmt-ct-strings.h"
 
 #ifdef FMT_WITH_OPTIONAL_COMPONENTS
 #   include "fmt/args.h"
 #   include "fmt/chrono.h"
-#   include "fmt/color.h"
 #   include "fmt/locale.h"
 #   include "fmt/ostream.h"
 #   include "fmt/ranges.h"
@@ -55,6 +57,8 @@ int main() {
     fmt::print("{}\n", result);
     fmt::print("{}\n", greetings);
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
+    fmt::print(fg(fmt::rgb(255, 200, 30)) | fmt::emphasis::italic, "{} ", "Greetings from");
+    fmt::print(fg(fmt::rgb(255, 180, 180)) | fmt::emphasis::italic, "{}\n", "Nuremberg, Germany!");
     result = fmt::format(FMT_STRING("{}"), 42);
     result = fmt::format(FMT_COMPILE("{}"), 42);
     result = fmt::format("{}"_cf, 42);
