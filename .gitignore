@@ -37,3 +37,7 @@ bmi64
 lib64
 x64
 *.user
+*.i
+*.ifc
+*.bat
+*.lnk

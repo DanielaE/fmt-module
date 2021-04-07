@@ -7,7 +7,6 @@ module;
 #ifdef MSVC_WORKAROUND_EXTERN_C
 #include "fwd-windows.h"
 #endif
-#include <cassert>
 
 module fmt;
 

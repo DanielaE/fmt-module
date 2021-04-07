@@ -5,7 +5,6 @@ module;
 // put all implementation-provided headers into the global module fragment
 // to prevent attachment to this module
 #include "includes.h"
-#include <cassert>
 
 export module fmt;
 
