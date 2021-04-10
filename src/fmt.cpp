@@ -15,6 +15,7 @@ export module fmt;
 // module purview to attach them to this module
 #include "fmt/format.h"
 #include "fmt/compile.h"
+#include "fmt/args.h"
 #include "fmt/printf.h"
 #include "fmt/color.h"
 #include "fmt-ct-strings.h"
@@ -24,7 +25,6 @@ export module fmt;
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
 #include "fmt/chrono.h"
-#include "fmt/args.h"
 #endif
 
 #ifdef FMT_WITH_OS
