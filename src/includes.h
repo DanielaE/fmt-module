@@ -34,19 +34,11 @@
 #include <locale>
 #include <ostream>
 #include <vector>
-
-#ifdef FMT_WITH_OPTIONAL_COMPONENTS
-// ranges.h
-#include <initializer_list>
-
-// chrono.h
+#include <functional>
 #include <chrono>
 #include <ctime>
 #include <sstream>
-
-// args.h
-#include <functional>
-#endif
+#include <initializer_list>
 
 // os.h
 #ifdef FMT_WITH_OS

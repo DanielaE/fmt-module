@@ -29,15 +29,12 @@ import fmt;
 #include "fmt/compile.h"
 #include "fmt/args.h"
 #include "fmt/printf.h"
+#include "fmt/ostream.h"
+#include "fmt/ranges.h"
 #include "fmt/color.h"
+#include "fmt/chrono.h"
+#include "fmt/locale.h"
 #include "fmt-ct-strings.h"
-
-#ifdef FMT_WITH_OPTIONAL_COMPONENTS
-#   include "fmt/chrono.h"
-#   include "fmt/locale.h"
-#   include "fmt/ostream.h"
-#   include "fmt/ranges.h"
-#endif
 
 #if !defined(FMT_HEADER_ONLY) && defined(UNITY_BUILD)
 #include "format.cc"
@@ -69,11 +66,26 @@ template<> struct formatter<check_color> : formatter<string_view> {
 };    
 }
 
+#if !defined(NO_MODULE)
+#if defined(MODULE_WORKS)
+#include <chrono>
+#else
+// this leaks from the module BMI!
+// if you move this to line 52, std::chrono is correctly unknown
+auto gNow = std::chrono::system_clock::now();
+#error BMI leaks stuff from the global module fragment! Remove this error directive to check further
+#endif
+#endif
+
 using namespace fmt::literals; // for udl ""_cf
 
 int main() {
     auto result = fmt::format("{}", 42.0);
     static_assert(sizeof(decltype(result)::value_type) == sizeof(char));
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    result = fmt::to_string(42);
+#endif
+    result = "{value}"_format("value"_a = 42);
     auto greetings = fmt::format("{greeting} {city}!", "greeting"_a = "Grüße aus", fmt::arg("city", "Nürnberg"));
     fmt::print("{}\n", result);
     fmt::print("{}\n", greetings);
@@ -93,13 +105,19 @@ int main() {
 #endif
   {
     fmt::string_view sv{"bla"};
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
-    result = fmt::format("{:>10}", check_color::blue);
-#endif
+    fmt::formatter<fmt::string_view> fsv;
     fmt::format_args args = fmt::make_format_args("hi", result);
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    result = fmt::format(std::locale(), "{}", 42);
+    result = fmt::format("{:>10}", check_color::blue);
+    result = fmt::vformat(std::locale(), "{},{}", args);
+#endif
     result = fmt::vformat("{},{}", args);
     fmt::vprint("{},{}\n", args);
   }
+  {
+
+  }    
     const auto common_style = bg(fmt::color::dark_slate_gray) | fmt::emphasis::italic;
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     fmt::print(fg(fmt::rgb(255, 200, 30)) | common_style, "{} ", "Greetings from");
@@ -116,6 +134,8 @@ int main() {
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     auto wresult = fmt::format(L"{}", 42.0);
     static_assert(sizeof(decltype(wresult)::value_type) == sizeof(wchar_t));
+    wresult = fmt::to_wstring(42);
+    wresult = L"{}"_format(L"value"_a = 42);
     auto wgreetings = fmt::format(L"{} {}!", L"Greetings from", L"Nuremberg");
     fmt::print(L"wide: {}\n", wresult);
     fmt::print(L"wide: {}\n", wgreetings);
@@ -140,4 +160,11 @@ using std::string_view;
     static_assert(fmt::wstring_view(wc).data() == wreference);
 #endif
 
+  {
+    auto Now = std::chrono::system_clock::now(); // this leaks from the module BMI!
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    result = fmt::format("{:%Y-%m-%d %H:%M:%S}", Now);
+    wresult = fmt::format(L"{:%Y-%m-%d %H:%M:%S}", Now);
+#endif
+  }
 }

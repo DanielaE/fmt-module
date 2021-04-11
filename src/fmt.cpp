@@ -17,14 +17,14 @@ export module fmt;
 #include "fmt/compile.h"
 #include "fmt/args.h"
 #include "fmt/printf.h"
+#include "fmt/ostream.h"
+#include "fmt/ranges.h"
 #include "fmt/color.h"
+#include "fmt/chrono.h"
 #include "fmt-ct-strings.h"
 
 #ifdef FMT_WITH_OPTIONAL_COMPONENTS
 #include "fmt/locale.h"
-#include "fmt/ostream.h"
-#include "fmt/ranges.h"
-#include "fmt/chrono.h"
 #endif
 
 #ifdef FMT_WITH_OS
