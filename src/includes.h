@@ -1,44 +1,40 @@
-// format.h
+#include <cctype>
 #include <cerrno>
+#include <climits>
 #include <cmath>
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
-#include <cwchar>
-#include <limits>
-#include <memory>
-#include <stdexcept>
-#include <utility>
-
-// core.h
 #include <cstdio>
 #include <cstring>
-#include <iterator>
-#include <string>
-#include <type_traits>
-#include <string_view>
+#include <ctime>
+#include <cwchar>
 
-// format.h
+#include <algorithm>
+#include <chrono>
+#include <compare>
+#include <exception>
+#include <functional>
+#include <initializer_list>
+#include <iterator>
+#include <limits>
+#include <locale>
+#include <memory>
+#include <ostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
 #if _MSC_VER
 #  include <intrin.h>  // _BitScanReverse[64], _BitScanForward[64], _umul128
 #endif
-
-// format-inl.h
-#include <algorithm>
-#include <cctype>
-#include <climits>
-#include <cstdarg>
-#include <exception>
 #ifdef _WIN32
 #  include <io.h>
 #endif
-#include <locale>
-#include <ostream>
-#include <vector>
-#include <functional>
-#include <chrono>
-#include <ctime>
-#include <sstream>
-#include <initializer_list>
 
 // os.h
 #ifdef FMT_WITH_OS
