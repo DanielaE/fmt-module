@@ -1,11 +1,17 @@
-//#define NO_MODULE
-//#define UNITY_BUILD
 //#define MODULE_WORKS
+//#define EXPOSE_MSVC_MODULE_LEAK_HEADER_GUARD_BUG
+//#define EXPOSE_MSVC_MODULE_LEAK_GLOBAL_MODULE_BUG
+//#define EXPOSE_MSVC_MODULE_ICE
 
 #pragma warning(disable: 4127)
 #if !defined(NO_MODULE)
 
 import fmt;
+#if !defined(EXPOSE_MSVC_MODULE_LEAK_GLOBAL_MODULE_BUG) && defined(EXPOSE_MSVC_MODULE_ICE)
+#include <chrono>
+#include <string_view>
+#endif
+#include <compare>
 
 #ifdef EXPOSE_MSVC_MODULE_LEAK_HEADER_GUARD_BUG
 #ifdef FMT_CORE_H_
@@ -39,7 +45,7 @@ import fmt;
 #if !defined(FMT_HEADER_ONLY) && defined(UNITY_BUILD)
 #include "format.cc"
 #endif
-
+#include <chrono>
 #endif
 
 // provide FMT_* macros using templates from fmt-ct-strings.h
@@ -66,15 +72,11 @@ template<> struct formatter<check_color> : formatter<string_view> {
 };    
 }
 
-#if !defined(NO_MODULE)
-#if defined(MODULE_WORKS)
-#include <chrono>
-#else
+#if !defined(NO_MODULE) && defined(EXPOSE_MSVC_MODULE_LEAK_GLOBAL_MODULE_BUG)
 // this leaks from the module BMI!
-// if you move this to line 52, std::chrono is correctly unknown
+// if you move this to line 56 or above, std::chrono is correctly unknown because <chrono> was never included
 auto gNow = std::chrono::system_clock::now();
-#error BMI leaks stuff from the global module fragment! Remove this error directive to check further
-#endif
+#error BMI leaks stuff from the global module fragment!
 #endif
 
 using namespace fmt::literals; // for udl ""_cf
@@ -82,19 +84,15 @@ using namespace fmt::literals; // for udl ""_cf
 int main() {
     auto result = fmt::format("{}", 42.0);
     static_assert(sizeof(decltype(result)::value_type) == sizeof(char));
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
     result = fmt::to_string(42);
-#endif
     result = "{value}"_format("value"_a = 42);
     auto greetings = fmt::format("{greeting} {city}!", "greeting"_a = "Grüße aus", fmt::arg("city", "Nürnberg"));
     fmt::print("{}\n", result);
     fmt::print("{}\n", greetings);
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
   {
     fmt::memory_buffer out_buffer;
     const auto format_to_result = fmt::format_to(out_buffer, "{}", 42);
   }
-#endif
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
   {
     auto store = fmt::dynamic_format_arg_store<fmt::format_context>();
@@ -106,18 +104,18 @@ int main() {
   {
     fmt::string_view sv{"bla"};
     fmt::formatter<fmt::string_view> fsv;
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    result = fmt::format("{:>10}", check_color::blue);
+#endif
     fmt::format_args args = fmt::make_format_args("hi", result);
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     result = fmt::format(std::locale(), "{}", 42);
-    result = fmt::format("{:>10}", check_color::blue);
     result = fmt::vformat(std::locale(), "{},{}", args);
 #endif
     result = fmt::vformat("{},{}", args);
     fmt::vprint("{},{}\n", args);
   }
-  {
-
-  }    
+    const auto fg_check = fg(fmt::rgb(255, 200, 30));
     const auto common_style = bg(fmt::color::dark_slate_gray) | fmt::emphasis::italic;
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     fmt::print(fg(fmt::rgb(255, 200, 30)) | common_style, "{} ", "Greetings from");
@@ -144,7 +142,6 @@ int main() {
 #endif
 
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
-using std::string_view;
     const auto s = fmt::_string<"{}">{};
     const auto c = fmt::_compile<"{}">{};
     const auto u = "{}"_cf;
@@ -161,10 +158,10 @@ using std::string_view;
 #endif
 
   {
-    auto Now = std::chrono::system_clock::now(); // this leaks from the module BMI!
+    auto Now = std::chrono::system_clock::now();
+    auto result1 = fmt::format("{:%Y-%m-%d %H:%M:%S}", Now);
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
-    result = fmt::format("{:%Y-%m-%d %H:%M:%S}", Now);
-    wresult = fmt::format(L"{:%Y-%m-%d %H:%M:%S}", Now);
+    auto wresult1 = fmt::format(L"{:%Y-%m-%d %H:%M:%S}", Now);
 #endif
   }
 }
