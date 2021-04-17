@@ -104,9 +104,7 @@ int main() {
   {
     fmt::string_view sv{"bla"};
     fmt::formatter<fmt::string_view> fsv;
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
     result = fmt::format("{:>10}", check_color::blue);
-#endif
     fmt::format_args args = fmt::make_format_args("hi", result);
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     result = fmt::format(std::locale(), "{}", 42);
@@ -116,6 +114,7 @@ int main() {
     fmt::vprint("{},{}\n", args);
   }
     const auto fg_check = fg(fmt::rgb(255, 200, 30));
+    const auto emphasis_check = fmt::emphasis::italic | fmt::emphasis::bold;
     const auto common_style = bg(fmt::color::dark_slate_gray) | fmt::emphasis::italic;
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     fmt::print(fg(fmt::rgb(255, 200, 30)) | common_style, "{} ", "Greetings from");
