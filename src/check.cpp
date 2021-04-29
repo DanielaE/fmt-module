@@ -135,7 +135,9 @@ int main() {
     // wchar_t
     auto wresult = fmt::format(L"{}", 42.0);
     static_assert(sizeof(decltype(wresult)::value_type) == sizeof(wchar_t));
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
     wresult = fmt::to_wstring(42);
+#endif
     auto wgreetings = fmt::format(L"{} {city}!", L"Greetings from", fmt::arg(L"city", L"Nuremberg, Germany!"));
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
     wresult = L"{}"_format(L"value"_a = 42);
