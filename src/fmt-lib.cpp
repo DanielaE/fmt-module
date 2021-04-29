@@ -1,6 +1,3 @@
-module;
-// put all implementation-provided headers into the global module fragment
-// to prevent attachment to this module
 #if !defined(_CRT_SECURE_NO_WARNINGS) && defined(_MSC_VER)
 #  define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -65,14 +62,6 @@ module;
 #  include <windows.h>
 #endif
 
-export module fmt;
-
-#define FMT_MODULE_EXPORT export
-#define FMT_MODULE_EXPORT_BEGIN export {
-#define FMT_MODULE_EXPORT_END }
-
-// all library-provided declarations and definitions need to be in the
-// module purview to attach them to this module
 #include "fmt/format.h"
 #include "fmt/args.h"
 #include "fmt/color.h"
@@ -86,11 +75,5 @@ export module fmt;
 
 #include "fmt-ct-strings.h"
 
-module : private;
-
-#if _MSC_FULL_VER <= 192930031
-#include "fmt/format-inl.h"
-#define FMT_STATIC_THOUSANDS_SEPARATOR
-#endif
 #include "format.cc"
 #include "os.cc"

@@ -3,9 +3,9 @@
 @set COMMON=%OPTIONS%
 @rem module
 CL.exe /c %COMMON% /interface /ifcOutput fmt-pp.ifc /Fo"fmt-m-pp.obj" fmt.cpp
-Lib.exe /OUT:fmt-m-pp.lib /NOLOGO /MACHINE:X64 /Ignore:4221 fmt-m-pp.obj
-CL.exe %COMMON% /reference "fmt=fmt-pp.ifc" /Fe"check-m-pp.exe" check.cpp fmt-m-pp.lib
+CL.exe %COMMON% /reference "fmt=fmt-pp.ifc" /Fe"check-m-pp.exe" check.cpp fmt-m-pp.obj
 @rem traditional
-CL.exe %COMMON% /D NO_MODULE /D UNITY_BUILD /Fe"check-t-un.exe" check.cpp
+CL.exe /c %COMMON% /Fo"fmt-t-un.obj" fmt-lib.cpp
+CL.exe %COMMON% /D NO_MODULE /Fe"check-t-un.exe" check.cpp fmt-t-un.obj
 check-t-un.exe
 check-m-pp.exe

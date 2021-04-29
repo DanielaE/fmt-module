@@ -29,22 +29,19 @@ import fmt;
 
 #pragma warning(disable: 4702)
 
-#include "includes.h"
-#define FMT_USE_NONTYPE_TEMPLATE_PARAMETERS 1
 #include "fmt/format.h"
-#include "fmt/compile.h"
 #include "fmt/args.h"
+#include "fmt/color.h"
+#include "fmt/compile.h"
+#include "fmt/locale.h"
+#include "fmt/chrono.h"
 #include "fmt/printf.h"
 #include "fmt/ostream.h"
 #include "fmt/ranges.h"
-#include "fmt/color.h"
-#include "fmt/chrono.h"
-#include "fmt/locale.h"
+#include "fmt/os.h"
+
 #include "fmt-ct-strings.h"
 
-#if !defined(FMT_HEADER_ONLY) && defined(UNITY_BUILD)
-#include "format.cc"
-#endif
 #include <chrono>
 #endif
 
@@ -57,8 +54,9 @@ import fmt;
 enum class check_color {red, green, blue};
 
 namespace fmt {
-template<> struct formatter<check_color> : formatter<string_view> {
-// parse is inherited
+template<typename Char>
+struct formatter<check_color, Char> : formatter<basic_string_view<Char>, Char> {
+    using sv = basic_string_view<Char>;
     template <typename FormatContext>
     auto format(check_color c, FormatContext& ctx) {
         string_view name = "?";
@@ -67,7 +65,11 @@ template<> struct formatter<check_color> : formatter<string_view> {
             case check_color::green: name = "green"; break;
             case check_color::blue:  name = "blue"; break;
         }
-        return formatter<string_view>::format(name, ctx);
+		Char buffer[6];
+		Char * p = buffer;
+		for (auto Ch : name)
+			*(p++) = Ch;
+		return formatter<sv, Char>::format(sv{buffer, name.size()}, ctx);
     }
 };    
 }
@@ -85,8 +87,11 @@ int main() {
     auto result = fmt::format("{}", 42.0);
     static_assert(sizeof(decltype(result)::value_type) == sizeof(char));
     result = fmt::to_string(42);
+    auto greetings = fmt::format("{} {city}!", "Grüße aus", fmt::arg("city", "Nürnberg"));
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
     result = "{value}"_format("value"_a = 42);
-    auto greetings = fmt::format("{greeting} {city}!", "greeting"_a = "Grüße aus", fmt::arg("city", "Nürnberg"));
+    greetings = fmt::format("{greeting} {city}!", "greeting"_a = "Grüße aus", fmt::arg("city", "Nürnberg"));
+#endif
     fmt::print("{}\n", result);
     fmt::print("{}\n", greetings);
   {
@@ -104,40 +109,75 @@ int main() {
   {
     fmt::string_view sv{"bla"};
     fmt::formatter<fmt::string_view> fsv;
-    result = fmt::format("{:>10}", check_color::blue);
+    result = fmt::format("{}", check_color::blue);
     fmt::format_args args = fmt::make_format_args("hi", result);
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    result = fmt::vformat("{},{}", args);
+#if defined(NO_MODULE) || _MSC_FULL_VER > 192930031
     result = fmt::format(std::locale(), "{}", 42);
     result = fmt::vformat(std::locale(), "{},{}", args);
 #endif
-    result = fmt::vformat("{},{}", args);
     fmt::vprint("{},{}\n", args);
   }
     const auto fg_check = fg(fmt::rgb(255, 200, 30));
     const auto emphasis_check = fmt::emphasis::italic | fmt::emphasis::bold;
     const auto common_style = bg(fmt::color::dark_slate_gray) | fmt::emphasis::italic;
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
+    // ICEs in color.h
     fmt::print(fg(fmt::rgb(255, 200, 30)) | common_style, "{} ", "Greetings from");
     fmt::print(fg(fmt::rgb(255, 180, 180)) | common_style, "{}\n", "Nuremberg, Germany!");
+#endif
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
     result = fmt::format(FMT_STRING("{}"), 42);
     result = fmt::format(FMT_COMPILE("{}"), 42);
     result = fmt::format("{}"_cf, 42);
 #endif
 
     // wchar_t
-  {
-    fmt::wstring_view wv{L"wide: bla"};
-  }
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
     auto wresult = fmt::format(L"{}", 42.0);
     static_assert(sizeof(decltype(wresult)::value_type) == sizeof(wchar_t));
     wresult = fmt::to_wstring(42);
+    auto wgreetings = fmt::format(L"{} {city}!", L"Greetings from", fmt::arg(L"city", L"Nuremberg, Germany!"));
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
     wresult = L"{}"_format(L"value"_a = 42);
-    auto wgreetings = fmt::format(L"{} {}!", L"Greetings from", L"Nuremberg");
-    fmt::print(L"wide: {}\n", wresult);
+    wgreetings = fmt::format(L"{greeting} {city}!", L"greeting"_a = "Greetings from", fmt::arg(L"city", L"Nuremberg, Germany!"));
+#endif
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    // ICEs in format.h
+    fmt::print(L"\nwide: {}\n", wresult);
     fmt::print(L"wide: {}\n", wgreetings);
+#endif
+  {
+    fmt::wmemory_buffer out_buffer;
+    const auto format_to_result = fmt::format_to(out_buffer, L"{}", 42);
+  }
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+  {
+    auto store = fmt::dynamic_format_arg_store<fmt::wformat_context>();
+    store.push_back(42);
+    store.push_back(1.5f);
+    wresult = fmt::vformat(L"{} {}", store);
+  }
+#endif
+  {
+    fmt::wstring_view wv{L"wide: bla"};
+    wresult = fmt::format(L"{}", check_color::blue);
+    fmt::wformat_args args = fmt::make_format_args<fmt::wformat_context>(L"hi", wresult);
+    wresult = fmt::vformat(L"{},{}", args);
+#if defined(NO_MODULE) || _MSC_FULL_VER > 192930031
+    wresult = fmt::format(std::locale(), L"{}", 42);
+    wresult = fmt::vformat(std::locale(), L"{},{}", args);
+//    fmt::vprint(L"{},{}\n", args);
+#endif
+  }
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
+    // ICEs in color.h
+    fmt::print(fg(fmt::rgb(255, 200, 30)) | common_style, L"{} ", L"Greetings from");
+    fmt::print(fg(fmt::rgb(255, 180, 180)) | common_style, L"{}\n", L"Nuremberg, Germany!");
+#endif
+#if defined(NO_MODULE) || defined(MODULE_WORKS)
     wresult = fmt::format(FMT_STRING(L"{}"), 42);
     wresult = fmt::format(FMT_COMPILE(L"{}"), 42);
+    wresult = fmt::format(L"{}"_cf, 42);
 #endif
 
 #if defined(NO_MODULE) || defined(MODULE_WORKS)
@@ -156,11 +196,9 @@ int main() {
     static_assert(fmt::wstring_view(wc).data() == wreference);
 #endif
 
+  auto Now = std::chrono::system_clock::now();
   {
-    auto Now = std::chrono::system_clock::now();
-    auto result1 = fmt::format("{:%Y-%m-%d %H:%M:%S}", Now);
-#if defined(NO_MODULE) || defined(MODULE_WORKS)
-    auto wresult1 = fmt::format(L"{:%Y-%m-%d %H:%M:%S}", Now);
-#endif
+    result = fmt::format("{:%Y-%m-%d %H:%M:%S}", Now);
+    wresult = fmt::format(L"{:%Y-%m-%d %H:%M:%S}", Now);
   }
 }
